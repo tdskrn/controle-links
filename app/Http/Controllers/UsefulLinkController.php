@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Section;
 use App\Models\UsefulLink;
 use Illuminate\Http\Request;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class UsefulLinkController extends Controller
 {
@@ -33,17 +32,12 @@ class UsefulLinkController extends Controller
         $data = $request->except('image');
 
         if ($request->hasFile('image')) {
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
-                'folder' => 'controle-links',
-                'public_id' => 'link_' . time(),
-                'transformation' => [
-                    'width' => 400,
-                    'height' => 400,
-                    'crop' => 'limit'
-                ]
-            ]);
+            $imageFile = $request->file('image');
+            $imageData = file_get_contents($imageFile->getRealPath());
+            $mimeType = $imageFile->getMimeType();
+            $base64 = base64_encode($imageData);
             
-            $data['image'] = $uploadedFile->getSecurePath();
+            $data['image'] = 'data:' . $mimeType . ';base64,' . $base64;
         }
 
         UsefulLink::create($data);
@@ -71,29 +65,18 @@ class UsefulLinkController extends Controller
         $data = $request->except('image', 'remove_image');
 
         // Remover imagem se solicitado
-        if ($request->has('remove_image') && $usefulLink->image) {
-            $this->deleteCloudinaryImage($usefulLink->image);
+        if ($request->has('remove_image')) {
             $data['image'] = null;
         }
 
         // Atualizar imagem se fornecida
         if ($request->hasFile('image')) {
-            // Remove a imagem antiga se existir
-            if ($usefulLink->image) {
-                $this->deleteCloudinaryImage($usefulLink->image);
-            }
+            $imageFile = $request->file('image');
+            $imageData = file_get_contents($imageFile->getRealPath());
+            $mimeType = $imageFile->getMimeType();
+            $base64 = base64_encode($imageData);
             
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
-                'folder' => 'controle-links',
-                'public_id' => 'link_' . time(),
-                'transformation' => [
-                    'width' => 400,
-                    'height' => 400,
-                    'crop' => 'limit'
-                ]
-            ]);
-            
-            $data['image'] = $uploadedFile->getSecurePath();
+            $data['image'] = 'data:' . $mimeType . ';base64,' . $base64;
         }
 
         $usefulLink->update($data);
@@ -104,39 +87,9 @@ class UsefulLinkController extends Controller
 
     public function destroy(UsefulLink $usefulLink)
     {
-        if ($usefulLink->image) {
-            $this->deleteCloudinaryImage($usefulLink->image);
-        }
-
         $usefulLink->delete();
 
         return redirect()->route('useful-links.index')
             ->with('success', 'Link removido com sucesso!');
-    }
-
-    /**
-     * Delete image from Cloudinary
-     */
-    protected function deleteCloudinaryImage($imageUrl)
-    {
-        try {
-            $publicId = $this->extractPublicIdFromUrl($imageUrl);
-            Cloudinary::destroy($publicId);
-        } catch (\Exception $e) {
-            \Log::error("Failed to delete Cloudinary image: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Extract public ID from Cloudinary URL
-     */
-    protected function extractPublicIdFromUrl($url)
-    {
-        $path = parse_url($url, PHP_URL_PATH);
-        $parts = explode('/', $path);
-        $publicIdWithExtension = end($parts);
-        
-        // Remove a extensão do arquivo
-        return pathinfo($publicIdWithExtension, PATHINFO_FILENAME);
     }
 }

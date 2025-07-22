@@ -27,7 +27,7 @@
                         <tr>
                             <td>
                                 @if($link->image)
-                                    <img src="{{ asset('storage/' . $link->image) }}" alt="{{ $link->name }}" width="40" height="40" class="rounded">
+                                    <img src="{{ $link->image }}" alt="{{ $link->name }}" width="40" height="40" class="rounded" style="object-fit: cover;">
                                 @else
                                     <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                         <i class="bi bi-link text-white"></i>
