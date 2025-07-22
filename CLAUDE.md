@@ -78,3 +78,11 @@ npm run build
 - Home route (/) displays all sections with their links
 - Resource routes for sections and useful-links (excluding show actions)
 - All routes defined in routes/web.php
+
+## UI/Design
+- Modern dark theme with blue (#3b82f6) and pink (#ec4899) accents
+- Uses Inter font family for clean typography
+- Glass-morphism effects with backdrop blur and transparency
+- Responsive grid layouts for cards and sections
+- Hover animations and transitions for better UX
+- Custom CSS variables for consistent theming
